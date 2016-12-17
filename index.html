@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="divForLargeImage"></div>
+	<header>
+    <h1 id="title">Movies in a Snap!</h1>
+    Search: <input class="" id="search" type="text">
+    <button class="" id="movieInfo">Get Movie Data</button>
+    <button class="" id="random">Random</button>
+    <button class="" id="vidBtn">Show Video</button>
+    <button class="" id="infoToggle">Hide Info</button>
+	</header>
+	<main class="screen">
+		<div id="divForImage"></div>
+        <div id="imageToggle">
+            <img src="assets/movie-reels-and-popcorn.png" alt="">
+        </div>
+        <div id="divForTrailer">
+            <iframe class="embedded-video-large" frameborder="0" allowfullscreen="1" title="YouTube video player" width="980" height="535" id="youTubeVid" frameborder="0" allowfullscreen="true" allowscriptaccess="always" style="width: inherit; height: inherit;"></iframe>
+        </div>
+		<div class="overlay">
+			<div id="infoColumn">
+				<div id="divForMovieInfo"></div>
+				<div id="divForQuote"></div>
+			</div>
+			<div id="divForMusicPlayer">
+                <p>Music Samples</p>
+                <img id="musicImg">
+                <div id="artistName"></div> 
+                <div class="tune">
+                	<audio id="music1"></audio>
+                	<div id="track1" class="track"></div>
+                	<div class="play" id="play1">play</div>
+                    <div class="timeline">
+                        <div class="playhead"></div>
+                    </div>
+                </div>
+                <div class="tune">
+                	<audio id="music2"></audio>
+                	<div id="track2" class="track"></div>
+                	<div class="play" id="play2">play</div>
+                    <div class="timeline">
+                        <div class="playhead"></div>
+                    </div>
+                </div>
+                <div class="tune">
+                	<audio id="music3"></audio>
+                	<div id="track3" class="track"></div>
+                	<div class="play" id="play3">play</div>
+                    <div class="timeline">
+                        <div class="playhead"></div>
+                    </div>
+                </div>
+                <div class="tune">
+                	<audio id="music4"></audio>
+                	<div id="track4" class="track"></div>
+                	<div class="play" id="play4">play</div>
+                    <div class="timeline">
+                        <div class="playhead"></div>
+                    </div>
+                </div>
+                <div class="tune">
+                	<audio id="music5"></audio>
+                	<div id="track5" class="track"></div>
+                	<div class="play" id="play5">play</div>
+                    <div class="timeline">
+                        <div class="playhead"></div>
+                    </div>
+                </div>
+        	</div>
+		</div>
+	</main>
+	<footer class="seats"></footer>
+	<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+	<script src="script.js"></script>
+</body>
+</html>

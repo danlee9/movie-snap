@@ -12,56 +12,7 @@
  */
 $(document).ready(function () {
     addClickHandlers();
-    
 });
-
-function toggleIt() {
-    var $this = $(this);
-    var id = $this.attr('id').replace(/play/, '');
-    $this.toggleClass('active');
-    if($this.hasClass('active')){
-        $this.text('pause'); 
-        var textShadow = "#track" + id;
-        $(textShadow).css('text-shadow', '2px 2px 8px #FF0000');
-        var player = '#music' + id;
-        $(player).get(0).play();        
-    } else {
-        $this.text('play');
-        var textWhite = "#track" + id;
-        $(textWhite).css('text-shadow', '');
-        var pauser = '#music' + id;
-        $(pauser).get(0).pause();
-    }
-}
-
-function stopVideo(player) {
-        var vidSrc = player.attr('src');
-        player.attr('src', ''); // to force it to pause
-        player.attr('src', vidSrc);
-  };
-
-// function expandIt() {
-//     $('#divForLargeImage').css('visibility', 'visible');
-//     $('#divForImage').css('visibility', 'hidden');
-// }
-
-// function shrinkIt() {
-//     $('#divForLargeImage').css('visibility', 'hidden');
-//     $('#divForImage').css('visibility', 'visible');
-// }
-
-function imageToggle() {
-    $div = $('#divForLargeImage');
-    if ($div.hasClass('active')) {
-        // var width = $(document).width();
-        // console.log(width);
-        // $div.find('img').css('width', width);
-        $div.fadeOut();
-    } else {
-        $div.fadeIn();
-    }
-    $div.toggleClass('active');
-}
 
 /**
  * addClickHandlers - and click handler functions to button in DOM with id of movieInfo
@@ -74,15 +25,171 @@ function addClickHandlers() {
         }
     });
     $("#random").click(quoteToMovie);
-    $('#vidBtn').click(playVideo);
+    $('#vidBtn').click(showVideo);
     $('#infoToggle').click(infoToggle);
-    $('.play').click(toggleIt);
+    $('.play').click(musicToggle);
     $('#imageToggle').click(imageToggle);
     $('#divForLargeImage').click(imageToggle);
 }
 
-    
+function imageToggle() {
+    $div = $('#divForLargeImage');
+    $div.hasClass('active') ? $div.fadeOut() : $div.fadeIn();
+    $div.toggleClass('active');
+}
 
+function infoToggle() {
+    var $this = $(this);
+    $this.toggleClass('active');
+    if($this.hasClass('active')){
+        musicPauseAll();
+        $this.text('Show Info');
+        $('.overlay').fadeOut('fast');
+    } else {
+        $this.text('Hide Info');        
+        ytPlayer.pauseVideo();
+        $('.overlay').fadeIn('fast');
+    }
+}
+
+/**
+ * showVideo - shows video when clicked
+ */    
+function showVideo() {
+    musicPauseAll();
+    var $this = $(this);
+    $('#infoToggle').addClass('active').text('Show Info');
+    $('.overlay').fadeOut('fast');
+    $this.toggleClass('active');
+    if($this.hasClass('active')){
+        $this.text('Show Poster');   
+        $('#divForTrailer').fadeIn('fast');
+    } else {
+        $this.text('Show Trailer');        
+        ytPlayer.pauseVideo();  
+        $('#divForTrailer').fadeOut('fast');
+    }
+}
+
+/**
+ * musicPauseAll - pauses all music
+ */   
+function musicPauseAll() {
+    $('audio').each(function() {
+        $(this)[0].pause();
+    });
+    $('.track').css('text-shadow', '');
+    $('.play').removeClass('active').text('play');
+}
+
+function musicToggle() {
+    var $this = $(this);
+    var id = $this.attr('id').replace(/play/, '');
+    $('audio').each(function() {
+        $(this)[0].pause();
+    });
+    $('.track').css('text-shadow', '');
+    // $('.play').text('play');
+    
+    if ($this.hasClass('active')) {
+        $this.removeClass('active').text('play');
+    } else {
+        $('.play').removeClass('active').text('play');
+        $this.addClass('active').text('pause');
+        $('#track' + id).css('text-shadow', '2px 2px 8px #FF0000');
+        $('#music' + id)[0].play();
+    }
+}
+
+/**
+ * apiCalls - function that calls each function call to the different apis; also resets info overlay to default position
+ */
+function apiCalls(search) {
+    $('#infoToggle').removeClass('active').text('Hide Info');
+    $('#vidBtn').removeClass('active').text('Show Trailer');
+    $('#divForTrailer').hide();      
+    ytPlayer.pauseVideo();
+    musicPauseAll();
+    $('.overlay').show();
+    makeTmdbAjaxCall(search);
+    updateMovieTrailerByKeyword(search);
+    searchItunes(search);
+}
+
+/**
+ * movieSearch - makes all the ajax calls to the different APIs
+ */
+function movieSearch() {
+    quoteFlag = false;
+    $("#divForImage").empty();
+    $("#divForQuote").empty();
+    $('#vidBtn').text('Show Video');
+    $('#vidBtn').removeClass('active');
+    $('#divForTrailer').fadeOut('fast');
+    $('#divForMusicPlayer').css('visibility', 'visible');
+    var search = $('#search').val();
+    if(search != ''){
+        // makeTmdbAjaxCall(search);
+        // updateMovieTrailerByKeyword(search);
+        // searchItunes(search);
+        apiCalls(search);
+    }else {
+        quoteToMovie();
+    }
+    $('#search').val('');
+}
+
+/**
+ * quoteFlag - flag to indicate whether to show tagline or quote
+ */
+var quoteFlag = false;
+var infoLoading = false;
+var trailerLoading = false;
+var musicLoading = false;
+
+/**
+ * quoteToMovie - makes an ajax call to famous quotes API and calls the makeTmdbAjaxCall function on success
+ */
+function quoteToMovie() {
+    if (infoLoading || trailerLoading || musicLoading) return;
+    quoteFlag = true;
+    infoLoading = true;
+    trailerLoading = true;
+    musicLoading = true;
+    $("#divForImage").empty();
+    $("#divForQuote").empty();
+    $('#vidBtn').text('Show Video');
+    $('#vidBtn').removeClass('active');
+    $('#search').text('');
+    $('#divForMusicPlayer').css('visibility', 'visible');
+    $('#divForQuote').css('visibility', 'visible');
+    $('#divForTrailer').fadeOut('fast');
+    $.ajax({
+        type: "POST",
+        headers: {
+            "X-Mashape-Key": "OivH71yd3tmshl9YKzFH7BTzBVRQp1RaKLajsnafgL2aPsfP9V"
+        },
+        dataType: 'json',
+        url: 'https://andruxnet-random-famous-quotes.p.mashape.com/?cat=movies'
+    }).then(function(res) {
+        ///console.log(res);
+        /**
+         * quote - local variable that holds value of the key "quote" in the response object
+         */
+        var quote = res.quote;
+        /**
+         * local variable that holds value of the key "author" in the response object
+         * @type {*}
+         */
+        var movie = res.author;
+
+        $("<h2>").text('"' + quote + '"').appendTo("#divForQuote");
+        // makeTmdbAjaxCall(movie);
+        // updateMovieTrailerByKeyword(movie);
+        // searchItunes(movie);
+        apiCalls(movie);
+    })
+}
 
 /**
  * makeFirstAjaxCall - makes a request to The Movie DB to return search results via AJAX
@@ -118,6 +225,7 @@ function makeTmdbAjaxCall(movie) {
          */
         error: function (response) {
             $("<h1>").text("We couldn't find anything!").appendTo("#divForQuote");
+            infoLoading = false;
         }
         /**
          * anonymous success function - executes on success of first ajax call?
@@ -127,11 +235,17 @@ function makeTmdbAjaxCall(movie) {
         /**
          * result - local variable that stores the object at index zero of the key "results" array in response object
          */
-        var result = response.results[0];
+        if (response.results) {
+            if (response.results[0]) {
+                var result = response.results[0];
+            }
+        }
         /**
          * movieID - local variable that stores the value of the key id in the results variable
          */
-        var movieID = result.id;
+        if (result.id) {
+            var movieID = result.id;
+        }
         /**
          * url - stores the url to be sent to the data base that includes the necessary path parameter
          * @type {string}
@@ -151,12 +265,14 @@ function makeTmdbAjaxCall(movie) {
              */
             error: function (response) {
                 $("<h1>").text("We couldn't find anything!").appendTo("#divForQuote");
+                infoLoading = false;
             },
             /**
              * anonymous success function - on successful request appends selected information to DOM
              * @param response
              */
             success: function (response) {
+                infoLoading = false;
                 /**
                  * result - local variable that stores the response object
                  */
@@ -182,66 +298,9 @@ function makeTmdbAjaxCall(movie) {
                 $("<p>").text(movieData.overview).appendTo("#divForMovieInfo");
                 
             }
-        })
-    })
+        });
+    });
 }
-
-/**
- * playVideo - shows video when clicked
- */    
-function playVideo() {
-    var $this = $(this);
-    $this.toggleClass('active');
-    if($this.hasClass('active')){
-        $this.text('Show Poster');        
-        $('#divForTrailer').fadeIn('fast');
-    } else {
-        $this.text('Show Trailer');        
-        stopVideo($('#youTubeVid'));
-        $('#divForTrailer').fadeOut('fast');
-    }
-}
-
-function infoToggle() {
-    var $this = $(this);
-    $this.toggleClass('active');
-    if($this.hasClass('active')){
-        $this.text('Show Info');
-        $('.overlay').fadeOut('fast');
-    } else {
-        $this.text('Hide Info');        
-        stopVideo($('#youTubeVid'));
-        $('.overlay').fadeIn('fast');
-    }
-}
-
-/**
- * quoteFlag - flag to indicate whether to show tagline or quote
- */
-var quoteFlag = false;
-
-/**
- * movieSearch - makes all the ajax calls to the different APIs
- */
-function movieSearch() {
-    quoteFlag = false;
-    $("#divForImage").empty();
-    $("#divForQuote").empty();
-    $('#vidBtn').text('Show Video');
-    $('#vidBtn').removeClass('active');
-    $('#divForTrailer').fadeOut('fast');
-    $('#divForMusicPlayer').css('visibility', 'visible');
-    var search = $('#search').val();
-    if(search != ''){
-        makeTmdbAjaxCall(search);
-        updateMovieTrailerByKeyword(search);
-        searchItunes(search);
-        $('#search').val('');
-    }else
-        quoteToMovie();
-        $('#search').val('');
-}
-
 
 var timelineWidth = $('.timeline')[0].offsetWidth - $('.playhead')[0].offsetWidth;
 /**
@@ -249,100 +308,127 @@ var timelineWidth = $('.timeline')[0].offsetWidth - $('.playhead')[0].offsetWidt
  */
 function searchItunes(search) {
     var url = "https://itunes.apple.com/search?media=music&order=popular&term=" + search + " soundtrack&callback=?";
-    $.getJSON(url, function (data) {
-
-        $('#musicImg').attr('src', data.results[0].artworkUrl100);
-        $('#artistName').text(data.results[0].collectionName);
-        $('.playhead').css('margin-left', 0);
-        for (var i=0; i<5; i++) {
-            var trackStr = '#track' + (i+1);
-            var musicStr = '#music' + (i+1);
-            var result = data.results[i];
-            $(trackStr).text(result.trackName);
-            $(musicStr).off().attr('src', result.previewUrl).on('canplaythrough', function() {
-                var $this = $(this);
-                var music = $this[0];
-                var $play = $this.nextAll('.play');
-                var $timeline = $this.nextAll('.timeline');
-                var $playhead = $timeline.find('.playhead');
-                var timeupdate = function () {
-                    var playPercent = timelineWidth * (music.currentTime / music.duration);
-                    $playhead.css('margin-left', playPercent + 'px');
-                    if (music.currentTime === music.duration) {
-                        $play.removeClass('active');
-                        $play.text('play');
-                        $('#track' + $play.attr('id').replace(/play/, '')).css('text-shadow', '');
-                    }
-                }
-                $this.on('timeupdate', timeupdate);
-
-                var moveplayhead = function(e) {
-                    var playheadRadius = $playhead[0].offsetWidth/2;
-                    // var timelineOffset = $timeline[0].offsetLeft - $timeline[0].scrollLeft;
-                    var timelineOffset = $timeline[0].getBoundingClientRect();
-                    var newMargLeft = e.pageX - timelineOffset.left - playheadRadius;
-                    if (newMargLeft >= playheadRadius && newMargLeft <= timelineWidth + playheadRadius) {
-                        $playhead.css('margin-left', newMargLeft + "px");
-                        music.currentTime = music.duration * (newMargLeft/timelineWidth);
-                    }
-                    if (newMargLeft < playheadRadius) {
-                        $playhead.css('margin-left', "0px");
-                        music.currentTime = 0;
-                    }
-                    if (newMargLeft > timelineWidth + playheadRadius) {
-                        $playhead.css('margin-left', timelineWidth + "px");
-                        music.currentTime = music.duration;
-                        $play.removeClass('active');
-                        $play.text('play');
-                        $('#track' + $play.attr('id').replace(/play/, '')).css('text-shadow', '');
-                    }
-                }
-
-                $timeline.on('click', moveplayhead);
-            });
-        }
-        
-    });
-}
-
-/**
- * quoteToMovie - makes an ajax call to famous quotes API and calls the makeTmdbAjaxCall function on success
- */
-function quoteToMovie() {
-    quoteFlag = true;
-    $("#divForImage").empty();
-    $("#divForQuote").empty();
-    $('#vidBtn').text('Show Video');
-    $('#vidBtn').removeClass('active');
-    $('#search').text('');
-    $('#divForMusicPlayer').css('visibility', 'visible');
-    $('#divForQuote').css('visibility', 'visible');
-    $('#divForTrailer').fadeOut('fast');
     $.ajax({
-        type: "POST",
-        headers: {
-            "X-Mashape-Key": "OivH71yd3tmshl9YKzFH7BTzBVRQp1RaKLajsnafgL2aPsfP9V"
-        },
-        dataType: 'json',
-        url: 'https://andruxnet-random-famous-quotes.p.mashape.com/?cat=movies'
-    }).then(function(res) {
-        ///console.log(res);
-        /**
-         * quote - local variable that holds value of the key "quote" in the response object
-         */
-        var quote = res.quote;
-        /**
-         * local variable that holds value of the key "author" in the response object
-         * @type {*}
-         */
-        var movie = res.author;
+        url: url,
+        dataType: "JSON",
+        method: "GET",
+        success: function(data) {
+            musicLoading = false;
+            $('#musicImg').attr('src', data.results[0].artworkUrl100);
+            $('#artistName').text(data.results[0].collectionName);
+            $('.playhead').css('margin-left', 0);
+            for (var i=0; i<5; i++) {
+                var trackStr = '#track' + (i+1);
+                var musicStr = '#music' + (i+1);
+                var result = data.results[i];
+                $(trackStr).text(result.trackName);
+                $(musicStr).off().attr('src', result.previewUrl).on('canplaythrough', function() {
+                    var $this = $(this);
+                    var music = $this[0];
+                    var $play = $this.nextAll('.play');
+                    var $timeline = $this.nextAll('.timeline');
+                    var $playhead = $timeline.find('.playhead');
+                    var timeupdate = function () {
+                        var playPercent = timelineWidth * (music.currentTime / music.duration);
+                        $playhead.css('margin-left', playPercent + 'px');
+                        if (music.currentTime === music.duration) {
+                            $play.removeClass('active');
+                            $play.text('play');
+                            $('#track' + $play.attr('id').replace(/play/, '')).css('text-shadow', '');
+                        }
+                    }
+                    $this.on('timeupdate', timeupdate);
 
-        $("<h2>").text('"' + quote + '"').appendTo("#divForQuote");
-        makeTmdbAjaxCall(movie);
-        updateMovieTrailerByKeyword(movie);
-        searchItunes(movie);
-    })
+                    var moveplayhead = function(e) {
+                        var playheadRadius = $playhead[0].offsetWidth/2;
+                        // var timelineOffset = $timeline[0].offsetLeft - $timeline[0].scrollLeft;
+                        var timelineOffset = $timeline[0].getBoundingClientRect();
+                        var newMargLeft = e.pageX - timelineOffset.left - playheadRadius;
+                        if (newMargLeft >= playheadRadius && newMargLeft <= timelineWidth + playheadRadius) {
+                            $playhead.css('margin-left', newMargLeft + "px");
+                            music.currentTime = music.duration * (newMargLeft/timelineWidth);
+                        }
+                        if (newMargLeft < playheadRadius) {
+                            $playhead.css('margin-left', "0px");
+                            music.currentTime = 0;
+                        }
+                        if (newMargLeft > timelineWidth + playheadRadius) {
+                            $playhead.css('margin-left', timelineWidth + "px");
+                            music.currentTime = music.duration;
+                            $play.removeClass('active');
+                            $play.text('play');
+                            $('#track' + $play.attr('id').replace(/play/, '')).css('text-shadow', '');
+                        }
+                    }
+
+                    $timeline.on('click', moveplayhead);
+                });
+            }
+        },
+        error: function() {
+            $("<h1>").text("We couldn't find anything!").appendTo("#divForQuote");
+            musicLoading = false;
+        }
+    });
+
+    // $.getJSON(url, function (data) {
+
+    //     $('#musicImg').attr('src', data.results[0].artworkUrl100);
+    //     $('#artistName').text(data.results[0].collectionName);
+    //     $('.playhead').css('margin-left', 0);
+    //     for (var i=0; i<5; i++) {
+    //         var trackStr = '#track' + (i+1);
+    //         var musicStr = '#music' + (i+1);
+    //         var result = data.results[i];
+    //         $(trackStr).text(result.trackName);
+    //         $(musicStr).off().attr('src', result.previewUrl).on('canplaythrough', function() {
+    //             var $this = $(this);
+    //             var music = $this[0];
+    //             var $play = $this.nextAll('.play');
+    //             var $timeline = $this.nextAll('.timeline');
+    //             var $playhead = $timeline.find('.playhead');
+    //             var timeupdate = function () {
+    //                 var playPercent = timelineWidth * (music.currentTime / music.duration);
+    //                 $playhead.css('margin-left', playPercent + 'px');
+    //                 if (music.currentTime === music.duration) {
+    //                     $play.removeClass('active');
+    //                     $play.text('play');
+    //                     $('#track' + $play.attr('id').replace(/play/, '')).css('text-shadow', '');
+    //                 }
+    //             }
+    //             $this.on('timeupdate', timeupdate);
+
+    //             var moveplayhead = function(e) {
+    //                 var playheadRadius = $playhead[0].offsetWidth/2;
+    //                 // var timelineOffset = $timeline[0].offsetLeft - $timeline[0].scrollLeft;
+    //                 var timelineOffset = $timeline[0].getBoundingClientRect();
+    //                 var newMargLeft = e.pageX - timelineOffset.left - playheadRadius;
+    //                 if (newMargLeft >= playheadRadius && newMargLeft <= timelineWidth + playheadRadius) {
+    //                     $playhead.css('margin-left', newMargLeft + "px");
+    //                     music.currentTime = music.duration * (newMargLeft/timelineWidth);
+    //                 }
+    //                 if (newMargLeft < playheadRadius) {
+    //                     $playhead.css('margin-left', "0px");
+    //                     music.currentTime = 0;
+    //                 }
+    //                 if (newMargLeft > timelineWidth + playheadRadius) {
+    //                     $playhead.css('margin-left', timelineWidth + "px");
+    //                     music.currentTime = music.duration;
+    //                     $play.removeClass('active');
+    //                     $play.text('play');
+    //                     $('#track' + $play.attr('id').replace(/play/, '')).css('text-shadow', '');
+    //                 }
+    //             }
+
+    //             $timeline.on('click', moveplayhead);
+    //         });
+    //     }
+        
+    // }).always(function() {
+    //     musicLoading = false;
+    // });
 }
+
 /**
  * This function updates the movie trailer by searching for an video official movie trailer of the given movie on youTube.
  * The function will take a movie title (keyword) and appends the phrase ' official trailer' to the search term.
@@ -350,6 +436,20 @@ function quoteToMovie() {
  * Note that this sample limits the results to 1.
  * @param {string} keyword
  */
+var tag = document.createElement('script');
+
+tag.src = "https://www.youtube.com/iframe_api";
+var firstScriptTag = document.getElementsByTagName('script')[0];
+firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+var ytPlayer;
+function onYouTubeIframeAPIReady() {
+    ytPlayer = new YT.Player('youTubeVid', {
+        height: '535',
+        width: '980'
+    });
+}
+
 function updateMovieTrailerByKeyword(keyword) {
     keyword += ' official trailer';
     var result = null;
@@ -364,14 +464,18 @@ function updateMovieTrailerByKeyword(keyword) {
             maxResults: 1
         },
         success: function (response) {
+            trailerLoading = false;
             var videoId = response.items[0].id.videoId;
             var hrefMain = '//www.youtube.com/watch?v=';
             var srcMain = 'https://www.youtube.com/embed/';
             var srcExtra = '?cc_load_policy=1&amp;controls=2&amp;rel=0&amp;hl=en&amp;enablejsapi=1&amp;origin=https%3A%2F%2Fsupport.google.com&amp;widgetid=1&enablejsapi=1';
+                // adding an origin adds extra security but it should match this site's domain instead of manually writing out support.google here
+                srcExtra = '?cc_load_policy=1&amp;controls=2&amp;rel=0&amp;hl=en&amp;enablejsapi=1&amp;widgetid=1&enablejsapi=1';
 
             $('#youTubeVid').attr({'href': hrefMain + videoId, 'data-videoid': videoId, 'src': srcMain + videoId + srcExtra});
         },
         error: function (response) {
+            trailerLoading = false;
             console.log('what a failure?');
         }
     });

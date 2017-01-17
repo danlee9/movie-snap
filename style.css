@@ -1,7 +1,8 @@
 body {
 	background: black;
 	font-family: 'Verdana', sans-serif;
-  width: 100%;
+  /*width: 100%;*/
+  overflow-x: hidden;
 }
 
 #divForLargeImage {

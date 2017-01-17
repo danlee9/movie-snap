@@ -1,5 +1,7 @@
 # Movie Snap
 
+Live: http://danlee.site/movie-snap/ (meant to be viewed on a desktop)
+
 - Get movie info in a snap!
 - Search button makes ajax requests to tmdb, youtube, and iTunes
 	- Receives movie information, an official poster, a trailer, and music samples for the searched movie

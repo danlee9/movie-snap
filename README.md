@@ -1,6 +1,6 @@
 # Movie Snap
 
-Live: http://danlee.site/movie-snap/ (best viewed on a desktop)
+Live: http://danlee.site/movie-snap/
 
 - Get movie info in a snap!
 - Search button makes ajax requests to tmdb, youtube, and iTunes
@@ -8,4 +8,5 @@ Live: http://danlee.site/movie-snap/ (best viewed on a desktop)
 - Random button makes a request to a random movie quote generator to display a movie quote and makes a subsequent search for info on that movie
 
 ### Planned Features and Future Additions
-- Multiple posters and multiple trailers
+- Have requests add extra posters to cycle through
+- Feature extra trailers

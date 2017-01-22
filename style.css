@@ -53,6 +53,12 @@ button:hover {
   background-color: rgb(111,22,24);
 }
 
+.warning {
+  display: none;
+  text-align: center;
+  font-style: italic;
+}
+
 #search {
 	outline: none;
 	padding: 10px;
@@ -236,4 +242,10 @@ div.play.active {
 .seats {
 	height: 424px;
 	background: url('assets/seats.png') center center;
+}
+
+@media screen and (max-width: 1010px) {
+  .warning {
+    display: block;
+  }
 }
